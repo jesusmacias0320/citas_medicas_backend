@@ -24,11 +24,10 @@ const forgotPassword = async (req, res) => {
     const resetLink = `${frontendURL}/reset-password/${token}`;
 
     const transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
+      service: "gmail",
       auth: {
-        user: "constance.hoeger66@ethereal.email",
-        pass: "nwP11fhgfQE833DGgQ",
+        user: "tu_correo_gmail@gmail.com", 
+        pass: "xxxx xxxx xxxx xxxx",       
       },
     });
 
