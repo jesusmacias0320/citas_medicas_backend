@@ -140,18 +140,13 @@ const updateAppointmentStatus = async (req, res) => {
       text: `Hola ${appointment.Paciente.nombre},\n\nTe informamos que el estado de tu cita médica para el ${appointment.fecha} a las ${appointment.hora} ha cambiado a: ${estado.toUpperCase()}.\n\nSaludos,\nEl equipo de la Clínica.`,
     };
 
-    try {
-      const info = await transporter.sendMail(mailOptions);
-      console.log(
-        "¡Correo enviado! Puedes verlo aquí: ",
-        nodemailer.getTestMessageUrl(info)
-      );
-    } catch (errorCorreo) {
-      console.error(
-        "No se pudo enviar el correo por timeout, pero la cita SI se actualizó en la BD:",
-        errorCorreo.message
-      );
-    }
+    transporter.sendMail(mailOptions)
+      .then(info => {
+        console.log("¡Correo enviado! Puedes verlo aquí: ", nodemailer.getTestMessageUrl(info));
+      })
+      .catch(errorCorreo => {
+        console.error("Error al enviar el correo en segundo plano:", errorCorreo.message);
+      }); 
     res.status(200).json({ 
       message: "El estado de la cita se ha actualizado correctamente",
       appointment,
