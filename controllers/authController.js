@@ -1,7 +1,6 @@
 const User = require("../models/User");
 const crypto = require("crypto");
 const { Op } = require("sequelize");
-const nodemailer = require("nodemailer");
 
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
@@ -17,43 +16,19 @@ const forgotPassword = async (req, res) => {
     const token = crypto.randomBytes(20).toString("hex");
 
     user.resetPasswordToken = token;
-    user.resetPasswordExpires = new Date(Date.now() + 3600000); // Expira en 1 hora
+    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hora
     await user.save();
 
+   
     const frontendURL = process.env.FRONTEND_URL || "http://localhost:5173";
     const resetLink = `${frontendURL}/reset-password/${token}`;
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: "tu_correo_gmail@gmail.com", 
-        pass: "xxxx xxxx xxxx xxxx",       
-      },
-    });
-
-    const mailOptions = {
-      from: '"Soporte Técnico" <soporte@clinicamvp.com>',
-      to: email,
-      subject: "Recuperación de Contraseña",
-      text: `Hola,\n\nHaz clic en el siguiente enlace para restablecer tu contraseña:\n${resetLink}\n\nSi no solicitaste esto, ignora este correo.`,
-    };
-
-    transporter
-      .sendMail(mailOptions)
-      .then((info) => {
-        console.log("Correo simulado enviado a Ethereal.");
-        console.log(
-          "Puedes ver el correo aquí:",
-          nodemailer.getTestMessageUrl(info),
-        );
-        console.log("Enlace de recuperación:", resetLink);
-      })
-      .catch((err) =>
-        console.error("Error al enviar correo de recuperación:", err.message),
-      );
+    console.log(`\n=== ENLACE DE RECUPERACIÓN ===`);
+    console.log(resetLink);
+    console.log(`==============================\n`);
 
     res.status(200).json({
-      message: "Se ha enviado un enlace de recuperación a tu correo.",
+      message: "Se ha generado el enlace de recuperación. Revisa los logs del servidor.",
     });
   } catch (error) {
     console.error("Error en forgotPassword:", error);
@@ -69,7 +44,7 @@ const resetPassword = async (req, res) => {
     const user = await User.findOne({
       where: {
         resetPasswordToken: token,
-        resetPasswordExpires: { [Op.gt]: new Date() }, // Mayor a la fecha actual
+        resetPasswordExpires: { [Op.gt]: new Date() },
       },
     });
 
@@ -82,12 +57,9 @@ const resetPassword = async (req, res) => {
     user.password = newPassword;
     user.resetPasswordToken = null;
     user.resetPasswordExpires = null;
-
     await user.save();
 
-    res
-      .status(200)
-      .json({ message: "Tu contraseña ha sido actualizada exitosamente" });
+    res.status(200).json({ message: "Tu contraseña ha sido actualizada exitosamente" });
   } catch (error) {
     console.error("Error en resetPassword: ", error);
     res.status(500).json({ error: "Error al actualizar la contraseña." });
