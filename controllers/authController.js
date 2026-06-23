@@ -47,7 +47,6 @@ const forgotPassword = async (req, res) => {
           "Puedes ver el correo aquí:",
           nodemailer.getTestMessageUrl(info),
         );
-        // Te imprimo el link aquí abajo también por si quieres copiarlo rápido para probar
         console.log("Enlace de recuperación:", resetLink);
       })
       .catch((err) =>
@@ -60,6 +59,39 @@ const forgotPassword = async (req, res) => {
   } catch (error) {
     console.error("Error en forgotPassword:", error);
     res.status(500).json({ error: "Hubo un error al procesar la solicitud." });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: { [Op.gt]: new Date() }, // Mayor a la fecha actual
+      },
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ error: "El enlace es invalido o ha expirado." });
+    }
+
+    user.password = newPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+
+    await user.save();
+
+    res
+      .status(200)
+      .json({ message: "Tu contraseña ha sido actualizada exitosamente" });
+  } catch (error) {
+    console.error("Error en resetPassword: ", error);
+    res.status(500).json({ error: "Error al actualizar la contraseña." });
   }
 };
 
